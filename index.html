@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Systems Hub</title>
+    <style>
+        /* ==============================================================================
+           PREMIUM CLINIC INTERFACE COLOR SYSTEM (Mauve & Velvet Crimson Theme)
+           ============================================================================== */
+        :root {
+            --bg-main: #1a161c;           /* Deep Slate Mauve Background */
+            --sidebar-color: #251f29;     /* Rich Medium Mauve Sidebar */
+            --accent-crimson: #9d3b5b;    /* Deep Crimson Wine Accent */
+            --accent-hover: #bd4b72;      /* Bright Crimson Highlight */
+            --card-surface: #2d2533;      /* Elevated Card Surface */
+            --border-glow: #3d3245;       /* Subtle Border Line */
+            --text-primary: #f5f0f6;      /* Crisp Platinum White Text */
+            --text-muted: #a69bb0;        /* Soft Lavender Gray Text */
+            
+            /* Status Indicators */
+            --pill-green: #143a28;
+            --pill-green-text: #52e09b;
+            --pill-amber: #4d3107;
+            --pill-amber-text: #ffb84d;
+            --pill-info: #16314d;
+            --pill-info-text: #4da6ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; }
+
+        /* Login and Registration Screen Overlay Layout */
+        #login-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, var(--bg-main) 0%, var(--sidebar-color) 50%, var(--accent-crimson) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .login-box {
+            background: var(--card-surface);
+            padding: 2.5rem;
+            border-radius: 0.75rem;
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-box h2 { margin-bottom: 0.5rem; color: var(--text-primary); }
+        .login-box p { margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem; }
+
+        .toggle-form-link { color: var(--accent-hover); text-decoration: none; font-weight: 600; cursor: pointer; }
+        .toggle-form-link:hover { text-decoration: underline; }
+
+        /* App Framework Layout */
+        #app-shell { display: none; width: 100vw; height: 100vh; }
+        
+        #sidebar {
+            width: 260px;
+            background: var(--sidebar-color);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            border-right: 1px solid var(--border-glow);
+        }
+
+        .brand-logo { font-size: 1.4rem; font-weight: 700; color: var(--accent-crimson); margin-bottom: 2.5rem; }
+        .brand-logo span { color: #ffffff; }
+
+        .menu-group { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+        .menu-link {
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .menu-link:hover, .menu-link.active { background: var(--card-surface); color: #ffffff; }
+        .menu-link.active { border-left: 4px solid var(--accent-crimson); color: var(--text-primary); }
+
+        .exit-btn { margin-top: auto; padding: 0.75rem; background: var(--card-surface); text-align: center; border-radius: 0.375rem; cursor: pointer; font-size: 0.9rem; font-weight: 600; border: 1px solid var(--border-glow); }
+        .exit-btn:hover { background: #b91c1c; color: white; }
+
+        #main-workspace { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background-color: var(--bg-main); }
+        
+        header {
+            background: var(--sidebar-color);
+            padding: 1.25rem 2.5rem;
+            border-bottom: 1px solid var(--border-glow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .view-body { padding: 2.5rem; display: none; }
+        .view-body.active { display: block; }
+
+        .metrics-ribbon { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+        .metric-widget { background: var(--card-surface); padding: 1.5rem; border-radius: 0.5rem; border: 1px solid var(--border-glow); }
+        .metric-lbl { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 0.25rem; }
+        .metric-val { font-size: 1.75rem; font-weight: 700; color: var(--text-primary); }
+
+        .data-table-container { background: var(--card-surface); border-radius: 0.5rem; border: 1px solid var(--border-glow); overflow: hidden; }
+        .table-title { padding: 1.25rem; font-weight: 700; font-size: 1.05rem; border-bottom: 1px solid var(--border-glow); color: var(--text-primary); }
+        
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: var(--sidebar-color); padding: 0.85rem 1.25rem; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border-glow); }
+        td { padding: 1rem 1.25rem; font-size: 0.95rem; border-bottom: 1px solid var(--border-glow); color: var(--text-primary); }
+        tr:hover { background-color: rgba(255, 255, 255, 0.02); }
+
+        .form-block { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.2rem; }
+        input, textarea, select { width: 100%; padding: 0.75rem; background-color: var(--bg-main); border: 1px solid var(--border-glow); border-radius: 0.375rem; font-size: 0.95rem; color: var(--text-primary); outline: none; }
+        input:focus, textarea:focus, select:focus { border-color: var(--accent-hover); }
+
+        .submit-btn { background: var(--accent-crimson); color: white; border: none; padding: 0.8rem 1.5rem; font-weight: 700; border-radius: 0.375rem; cursor: pointer; transition: background 0.2s; }
+        .submit-btn:hover { background: var(--accent-hover); }
+
+        .badge { padding: 0.25rem 0.6rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
+        .badge-paid { background: var(--pill-green); color: var(--pill-green-text); }
+        .badge-pending { background: var(--pill-amber); color: var(--pill-amber-text); }
+        .badge-info { background: var(--pill-info); color: var(--pill-info-text); }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box" id="auth-login-card">
+            <h2>Clinic service API Gateway</h2>
+            <p>Sign in using registered clinical authorization keys</p>
+            <form onsubmit="executeLoginSequence(event)">
+                <div class="form-block">
+                    <label style="font-size:0.85rem; font-weight:700;">Account Email Address</label>
+                    <input type="email" id="user_email" value="admin@clinic.com" required>
+                </div>
+                <div class="form-block" style="margin-bottom:1.5rem;">
+                    <label style="font-size:0.85rem; font-weight:700;">Password Verification Key</label>
+                    <input type="password" id="user_password" value="hashed_password_1" required>
+                </div>
+                <button type="submit" class="submit-btn" style="width:100%; margin-bottom: 1rem;">Verify Credentials</button>
+                <div style="font-size: 0.85rem; text-align: center; color: var(--text-muted);">
+                    New team staff member? <span class="toggle-form-link" onclick="toggleAuthForm('register')">Register Account</span>
+                </div>
+            </form>
+        </div>
+
+        <div class="login-box" id="auth-register-card" style="display: none;">
+            <h2>Staff Registration</h2>
+            <p>Create a direct relational access profile profile</p>
+            <form onsubmit="executeRegistrationSequence(event)">
+                <div class="form-block">
+                    <label style="font-size:0.85rem; font-weight:700;">Full Staff Name</label>
+                    <input type="text" id="reg_fullname" placeholder="e.g. Nurse John Kamara" required>
+                </div>
+                <div class="form-block">
+                    <label style="font-size:0.85rem; font-weight:700;">Corporate Email String</label>
+                    <input type="email" id="reg_email" placeholder="example@clinic.com" required>
+                </div>
+                <div class="form-block">
+                    <label style="font-size:0.85rem; font-weight:700;">Plaintext Secure Password</label>
+                    <input type="password" id="reg_password" placeholder="Min 4 characters" minlength="4" required>
+                </div>
+                <div class="form-block" style="margin-bottom:1.8rem;">
+                    <label style="font-size:0.85rem; font-weight:700;">Assigned Operational Clearance Role</label>
+                    <select id="reg_role" required>
+                        <option value="1">1 - System Administrator</option>
+                        <option value="2">2 - Clinical Practitioner (Doctor)</option>
+                        <option value="3">3 - Registered Nurse Staff</option>
+                        <option value="4">4 - Pharmaceutical Inventory Head</option>
+                        <option value="5">5 - Front Desk Receptionist</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn" style="width:100%; margin-bottom: 1rem; background-color: var(--accent-crimson);">Commit New Profile</button>
+                <div style="font-size: 0.85rem; text-align: center; color: var(--text-muted);">
+                    Already have permissions? <span class="toggle-form-link" onclick="toggleAuthForm('login')">Return to Gateway</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-shell">
+        <nav id="sidebar">
+            <div class="brand-logo">✚ <span>MedCore Engine</span></div>
+            <ul class="menu-group">
+                <li class="menu-link active" id="link-billing" onclick="renderView(event, 'billing-view')">Billing Records</li>
+                <li class="menu-link" id="link-appointments" onclick="renderView(event, 'appointment-view')">Schedules</li>
+                <li class="menu-link" id="link-inventory" onclick="renderView(event, 'inventory-view')">Pharmacy Stock</li>
+                <li class="menu-link" id="link-prescriptions" onclick="renderView(event, 'prescription-view')">Write Prescription</li>
+            </ul>
+            <div class="exit-btn" onclick="destroySession()">Logout</div>
+        </nav>
+
+        <main id="main-workspace">
+            <header>
+                <h2 id="view-header-title">Billing Ledger Mappings</h2>
+                <div style="text-align: right;">
+                    <strong style="display:block; font-size:0.9rem;" id="profile-email">Connecting...</strong>
+                    <span style="font-size:0.75rem; color:var(--text-muted);" id="profile-role">Checking Clearance</span>
+                </div>
+            </header>
+
+            <section id="billing-view" class="view-body active">
+                <div class="metrics-ribbon" id="analytics-panel" style="display:none;">
+                    <div class="metric-widget"><div class="metric-lbl">Gross System Revenue</div><div class="metric-val" id="met-gross">$0.00</div></div>
+                    <div class="metric-widget"><div class="metric-lbl">Collected Fees</div><div class="metric-val" style="color:var(--pill-green-text);" id="met-paid">$0.00</div></div>
+                    <div class="metric-widget"><div class="metric-lbl">Arrears Pending</div><div class="metric-val" style="color:var(--pill-amber-text);" id="met-pending">$0.00</div></div>
+                </div>
+                <div class="data-table-container">
+                    <div class="table-title">Invoices Table (vw_billing_information)</div>
+                    <table id="table-billing">
+                        <thead><tr><th>Invoice ID</th><th>Patient Code</th><th>Account Holder Name</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="appointment-view" class="view-body">
+                <div class="data-table-container">
+                    <div class="table-title">Live Allocated Schedules (vw_appointments)</div>
+                    <table id="table-appointments">
+                        <thead><tr><th>ID</th><th>Patient Code</th><th>Patient Name</th><th>Doctor Reference</th><th>Date / Time Block</th><th>Status</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="inventory-view" class="view-body">
+                <div class="data-table-container">
+                    <div class="table-title">Medicine Catalogue Records (vw_medicine_inventory)</div>
+                    <table id="table-inventory">
+                        <thead><tr><th>Medicine Name</th><th>Stock Remaining</th><th>Unit Sale Cost</th><th>Expiry Constraint</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="prescription-view" class="view-body">
+                <div class="data-table-container" style="max-width:700px; padding:2rem;">
+                    <div class="table-title" style="padding:0 0 1.5rem 0;">Issue Clinical Treatment Order</div>
+                    <form onsubmit="postPrescriptionData(event)">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+                            <div class="form-block"><label>Patient ID Reference Mapping</label><input type="number" id="form-patient" required></div>
+                            <div class="form-block"><label>Physician Doctor ID Key</label><input type="number" id="form-doctor" required></div>
+                            <div class="form-block"><label>Target Catalog Medicine ID</label><input type="number" id="form-medicine" required></div>
+                            <div class="form-block"><label>Dispensation Volume Unit Total</label><input type="number" id="form-qty" min="1" required></div>
+                        </div>
+                        <div class="form-block" style="margin-top:1rem;"><label>Therapeutic Application Dosage Rules</label><textarea id="form-dosage" rows="3" placeholder="Take 1 tablet every 12 hours..." required></textarea></div>
+                        <button type="submit" class="submit-btn" style="margin-top:0.5rem;">Commit Order Records</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const API_BASE = `${window.location.origin}/api/v1`;
+        let USER_TOKEN = "";
+        let ACCOUNT_ROLE_ID = null;
+
+        function toggleAuthForm(mode) {
+            if(mode === 'register') {
+                document.getElementById('auth-login-card').style.display = 'none';
+                document.getElementById('auth-register-card').style.display = 'block';
+            } else {
+                document.getElementById('auth-register-card').style.display = 'none';
+                document.getElementById('auth-login-card').style.display = 'block';
+            }
+        }
+
+        // FIXED: Added implicit reference passing for dynamic active class toggles
+        function renderView(evt, viewId) {
+            document.querySelectorAll('.view-body').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
+            
+            document.getElementById(viewId).classList.add('active');
+            evt.currentTarget.classList.add('active');
+            document.getElementById('view-header-title').innerText = evt.currentTarget.innerText;
+
+            if (viewId === 'billing-view') loadBillingTab();
+            if (viewId === 'appointment-view') loadAppointmentTab();
+            if (viewId === 'inventory-view') loadInventoryTab();
+        }
+
+        async function executeRegistrationSequence(event) {
+            event.preventDefault();
+            const payload = {
+                email: document.getElementById('reg_email').value.trim(),
+                password: document.getElementById('reg_password').value.trim(),
+                role_id: parseInt(document.getElementById('reg_role').value),
+                full_name: document.getElementById('reg_fullname').value.trim()
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const responseText = await response.text();
+                if (!responseText) {
+                    throw new Error("Empty registration response. Please check your FastAPI application console logs.");
+                }
+                
+                const data = JSON.parse(responseText);
+                if (!response.ok) throw new Error(data.detail || "Database entity creation validation breach.");
+
+                alert(`Success! User generated dynamically. Proceeding to login mapping screen.`);
+                document.getElementById('user_email').value = payload.email;
+                document.getElementById('user_password').value = payload.password;
+                toggleAuthForm('login');
+            } catch (err) { alert(`Registration Failure: ${err.message}`); }
+        }
+
+        async function executeLoginSequence(event) {
+            event.preventDefault();
+            
+            const emailClean = document.getElementById('user_email').value.trim();
+            const passwordClean = document.getElementById('user_password').value.trim();
+
+            const bodyPayload = new URLSearchParams();
+            bodyPayload.append('username', emailClean);
+            bodyPayload.append('password', passwordClean);
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: bodyPayload
+                });
+
+                const responseText = await response.text();
+                if (!responseText) {
+                    throw new Error("FastAPI backend returned a blank status packet. Check terminal for unhandled Python exceptions.");
+                }
+
+                const data = JSON.parse(responseText);
+                if (!response.ok) throw new Error(data.detail || "Verification Failed: Invalid database credential details.");
+                
+                USER_TOKEN = data.access_token;
+                const tokenClaims = JSON.parse(atob(USER_TOKEN.split('.')[1]));
+                ACCOUNT_ROLE_ID = tokenClaims.role_id;
+
+                document.getElementById('profile-email').innerText = tokenClaims.sub;
+                document.getElementById('profile-role').innerText = `Role Identity Clearance Level: [${ACCOUNT_ROLE_ID}]`;
+                document.getElementById('login-screen').style.display = 'none';
+                
+                // FIXED: Toggled flex layout display properties context
+                document.getElementById('app-shell').style.display = 'flex';
+
+                loadBillingTab();
+            } catch (err) { 
+                console.error("Login Error Details:", err.message);
+                alert(`Authorization Blocked:\n${err.message}`); 
+            }
+        }
+
+        async function loadBillingTab() {
+            try {
+                if (ACCOUNT_ROLE_ID === 1) {
+                    document.getElementById('analytics-panel').style.display = 'grid';
+                    const metricsRes = await fetch(`${API_BASE}/clinic/analytics/financials`, { headers: { 'Authorization': `Bearer ${USER_TOKEN}` } });
+                    if (metricsRes.ok) {
+                        const m = await metricsRes.json();
+                        document.getElementById('met-gross').innerText = `$${m.gross_revenue.toFixed(2)}`;
+                        document.getElementById('met-paid').innerText = `$${m.collected_revenue.toFixed(2)}`;
+                        document.getElementById('met-pending').innerText = `$${m.pending_receivables.toFixed(2)}`;
+                    }
+                } else { document.getElementById('analytics-panel').style.display = 'none'; }
+
+                const tbody = document.querySelector('#table-billing tbody');
+                tbody.innerHTML = "<tr><td colspan='6'>Loading ledger matrices...</td></tr>";
+
+                const res = await fetch(`${API_BASE}/clinic/billing`, { headers: { 'Authorization': `Bearer ${USER_TOKEN}` } });
+                if (!res.ok) { tbody.innerHTML = `<tr><td colspan='6' style='color:#bd4b72;'>Access Denied for Role Identifier ${ACCOUNT_ROLE_ID}</td></tr>`; return; }
+                
+                const records = await res.json();
+                tbody.innerHTML = "";
+                records.forEach(r => {
+                    const badgeStyle = r.status.toLowerCase() === 'paid' ? 'badge-paid' : 'badge-pending';
+                    tbody.innerHTML += `<tr><td>#${r.id}</td><td><strong>${r.patient_code || 'N/A'}</strong></td><td>${r.first_name} ${r.last_name}</td><td>${r.description || 'Service Fee'}</td><td>$${r.amount.toFixed(2)}</td><td><span class='badge ${badgeStyle}'>${r.status}</span></td></tr>`;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadAppointmentTab() {
+            try {
+                const tbody = document.querySelector('#table-appointments tbody');
+                tbody.innerHTML = "<tr><td colspan='6'>Fetching allocated slots...</td></tr>";
+
+                const res = await fetch(`${API_BASE}/clinic/appointments`, { headers: { 'Authorization': `Bearer ${USER_TOKEN}` } });
+                if (!res.ok) { tbody.innerHTML = `<tr><td colspan='6' style='color:#bd4b72;'>Access Denied for Role Identifier ${ACCOUNT_ROLE_ID}</td></tr>`; return; }
+
+                const records = await res.json();
+                tbody.innerHTML = "";
+                records.forEach(r => {
+                    tbody.innerHTML += `<tr><td>${r.id}</td><td><strong>${r.patient_code || 'N/A'}</strong></td><td>${r.patient_name}</td><td>Doctor Assignment ID: ${r.doctor_id}</td><td>${new Date(r.appointment_date).toLocaleString()}</td><td><span class='badge badge-info'>${r.status}</span></td></tr>`;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadInventoryTab() {
+            try {
+                const tbody = document.querySelector('#table-inventory tbody');
+                tbody.innerHTML = "<tr><td colspan='4'>Streaming current view indexes...</td></tr>";
+
+                const res = await fetch(`${API_BASE}/clinic/inventory`, { headers: { 'Authorization': `Bearer ${USER_TOKEN}` } });
+                if (!res.ok) { tbody.innerHTML = `<tr><td colspan='4' style='color:#bd4b72;'>Access Denied: Requires Administrator (1) or Pharmacist (4) clearance tiers.</td></tr>`; return; }
+
+                const records = await res.json();
+                tbody.innerHTML = "";
+                records.forEach(r => {
+                    const dateParse = r.expiry_date ? new Date(r.expiry_date).toLocaleDateString() : 'Continuous';
+                    tbody.innerHTML += `<tr><td><strong>${r.medicine_name}</strong></td><td>${r.stock_quantity} Units Remaining</td><td>$${r.unit_price.toFixed(2)}</td><td>${dateParse}</td></tr>`;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function postPrescriptionData(event) {
+            event.preventDefault();
+            const payload = {
+                patient_id: parseInt(document.getElementById('form-patient').value),
+                doctor_id: parseInt(document.getElementById('form-doctor').value),
+                medicine_id: parseInt(document.getElementById('form-medicine').value),
+                quantity: parseInt(document.getElementById('form-qty').value),
+                dosage: document.getElementById('form-dosage').value
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/clinic/prescriptions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${USER_TOKEN}` },
+                    body: JSON.stringify(payload)
+                });
+
+                const output = await res.json();
+                if (res.ok) {
+                    alert(`Order Committed! Reference Index Token Generated: ${output.reference_id}.\nDownstream systemic triggers executed structural adjustments immediately.`);
+                    event.target.reset();
+                } else { alert(`Rejection Fault: ${output.detail}`); }
+            } catch(err) { alert(`Network failure committing prescription order.`); }
+        }
+
+        function destroySession() { window.location.reload(); }
+    </script>
+</body>
+</html>
